@@ -368,6 +368,7 @@ body.sidebar-collapsed .nav-tab::before {
 
 .metric-card {
   min-height: 118px;
+  min-width: 0;
   padding: 20px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -383,6 +384,10 @@ body.sidebar-collapsed .nav-tab::before {
 }
 
 .metric-card strong {
+  display: block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   font-size: 34px;
   line-height: 1;
 }
@@ -661,7 +666,8 @@ body.sidebar-collapsed .nav-tab::before {
 }
 
 .compact-metric strong {
-  font-size: 28px;
+  font-size: clamp(20px, 2.1vw, 28px);
+  line-height: 1.12;
 }
 
 .chart-frame {

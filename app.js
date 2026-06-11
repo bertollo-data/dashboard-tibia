@@ -1,4 +1,5 @@
 const STORAGE_KEY = "tibia-dashboard-v1";
+const TC_BUNDLE_SIZE = 25;
 
 const state = loadState();
 
@@ -208,6 +209,13 @@ calculatorForm.addEventListener("submit", (event) => {
     saveCalculatorState();
     renderCalculator({ updateInputs: false });
   });
+});
+
+calculatorTcAmount.addEventListener("change", () => {
+  const normalizedTcAmount = normalizeTcBundleAmount(calculatorTcAmount.value);
+  calculatorTcAmount.value = normalizedTcAmount > 0 ? String(normalizedTcAmount) : "";
+  saveCalculatorState();
+  renderCalculator();
 });
 
 characterForm.addEventListener("submit", (event) => {
@@ -1349,11 +1357,13 @@ function renderCalculator(options = {}) {
   const goldPerTc = calculator.goldPerTc;
   const realPerTc = calculator.realPerTc;
   const goldAmount = calculator.goldAmount;
-  const tcAmount = calculator.tcAmount;
-  const goldToTc = goldPerTc > 0 ? goldAmount / goldPerTc : 0;
-  const goldToReal = goldToTc * realPerTc;
-  const tcToGold = tcAmount * goldPerTc;
-  const tcToReal = tcAmount * realPerTc;
+  const tcAmount = normalizeTcBundleAmount(calculator.tcAmount);
+  const goldBundleCount = goldPerTc > 0 ? Math.floor(goldAmount / goldPerTc) : 0;
+  const tcBundleCount = Math.floor(tcAmount / TC_BUNDLE_SIZE);
+  const goldToTc = goldBundleCount * TC_BUNDLE_SIZE;
+  const goldToReal = goldBundleCount * realPerTc;
+  const tcToGold = tcBundleCount * goldPerTc;
+  const tcToReal = tcBundleCount * realPerTc;
 
   if (shouldUpdateInputs) {
     calculatorGoldPerTc.value = formatInputNumber(goldPerTc);
@@ -1361,7 +1371,7 @@ function renderCalculator(options = {}) {
     calculatorGoldAmount.value = formatInputNumber(goldAmount);
     calculatorTcAmount.value = formatInputNumber(tcAmount);
   }
-  metricGoldToTc.textContent = `${formatDecimal(goldToTc)} TC`;
+  metricGoldToTc.textContent = formatTcWithBundles(goldToTc);
   metricGoldToReal.textContent = formatCurrency(goldToReal);
   metricTcToGold.textContent = formatGold(tcToGold);
   metricTcToReal.textContent = formatCurrency(tcToReal);
@@ -1372,7 +1382,7 @@ function saveCalculatorState() {
     goldPerTc: parsePositiveNumber(calculatorGoldPerTc.value),
     realPerTc: parsePositiveNumber(calculatorRealPerTc.value),
     goldAmount: parsePositiveNumber(calculatorGoldAmount.value),
-    tcAmount: parsePositiveNumber(calculatorTcAmount.value),
+    tcAmount: normalizeTcBundleAmount(calculatorTcAmount.value),
     updatedAt: new Date().toISOString(),
   };
   persist();
@@ -1902,6 +1912,12 @@ function formatDecimal(value) {
   }).format(value || 0);
 }
 
+function formatTcWithBundles(value) {
+  const tcAmount = normalizeTcBundleAmount(value);
+  const bundles = Math.floor(tcAmount / TC_BUNDLE_SIZE);
+  return `${formatNumber(tcAmount)} TC${bundles > 0 ? ` (${formatNumber(bundles)}x)` : ""}`;
+}
+
 function formatCurrency(value) {
   return new Intl.NumberFormat("pt-BR", {
     currency: "BRL",
@@ -1917,6 +1933,10 @@ function parsePositiveNumber(value) {
   const normalized = String(value || "").replace(",", ".");
   const parsed = Number(normalized);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+}
+
+function normalizeTcBundleAmount(value) {
+  return Math.floor(parsePositiveNumber(value) / TC_BUNDLE_SIZE) * TC_BUNDLE_SIZE;
 }
 
 function formatGold(value) {
