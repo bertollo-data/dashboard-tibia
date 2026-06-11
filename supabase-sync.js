@@ -89,6 +89,13 @@
       investments: [],
       hunts: [],
       deliveries: [],
+      calculator: {
+        goldPerTc: 0,
+        realPerTc: 0,
+        goldAmount: 0,
+        tcAmount: 0,
+        updatedAt: "",
+      },
     };
 
     for (const [key, table] of Object.entries(tableMap)) {
@@ -99,6 +106,18 @@
         throw error;
       }
       nextState[key] = data.map(fromRemoteRecord);
+    }
+
+    const { data: settingsRows, error: settingsError } = await supabase
+      .from("settings")
+      .select("*")
+      .eq("id", "calculator")
+      .limit(1);
+    if (settingsError && settingsError.code !== "42P01") {
+      throw settingsError;
+    }
+    if (settingsRows && settingsRows.length > 0) {
+      nextState.calculator = fromRemoteCalculator(settingsRows[0]);
     }
 
     nextState.activeCharacterId = nextState.characters.length > 0 ? nextState.characters[0].id : null;
@@ -136,6 +155,20 @@
           throw upsertError;
         }
       }
+    }
+
+    const calculator = state.calculator || {};
+    const { error: settingsError } = await supabase.from("settings").upsert({
+      id: "calculator",
+      user_id: session.user.id,
+      gold_per_tc: Number(calculator.goldPerTc) || 0,
+      real_per_tc: Number(calculator.realPerTc) || 0,
+      gold_amount: Number(calculator.goldAmount) || 0,
+      tc_amount: Number(calculator.tcAmount) || 0,
+      updated_at: calculator.updatedAt || new Date().toISOString(),
+    });
+    if (settingsError && settingsError.code !== "42P01") {
+      throw settingsError;
     }
   }
 
@@ -267,6 +300,16 @@
       date: record.date,
       level: record.level,
       note: record.note || "",
+    };
+  }
+
+  function fromRemoteCalculator(record) {
+    return {
+      goldPerTc: Number(record.gold_per_tc) || 0,
+      realPerTc: Number(record.real_per_tc) || 0,
+      goldAmount: Number(record.gold_amount) || 0,
+      tcAmount: Number(record.tc_amount) || 0,
+      updatedAt: record.updated_at || "",
     };
   }
 

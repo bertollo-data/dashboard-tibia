@@ -606,7 +606,8 @@ body.sidebar-collapsed .nav-tab::before {
 .progress-grid,
 .investment-grid,
 .hunt-grid,
-.delivery-grid {
+.delivery-grid,
+.calculator-grid {
   display: grid;
   grid-template-columns: minmax(320px, 360px) minmax(0, 1fr);
   gap: 22px;
@@ -632,9 +633,20 @@ body.sidebar-collapsed .nav-tab::before {
   gap: 14px;
 }
 
-.delivery-summary {
+.delivery-summary,
+.calculator-summary {
   display: grid;
   grid-template-columns: repeat(3, minmax(150px, 1fr));
+  gap: 14px;
+}
+
+.calculator-summary {
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+}
+
+.calculator-inputs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
 }
 
@@ -824,7 +836,8 @@ body.sidebar-collapsed .nav-tab::before {
   .progress-grid,
   .investment-grid,
   .hunt-grid,
-  .delivery-grid {
+  .delivery-grid,
+  .calculator-grid {
     grid-template-columns: 1fr;
   }
 
@@ -835,7 +848,8 @@ body.sidebar-collapsed .nav-tab::before {
   .progress-grid > .editor-panel,
   .investment-grid > .editor-panel,
   .hunt-grid > .editor-panel,
-  .delivery-grid > .editor-panel {
+  .delivery-grid > .editor-panel,
+  .calculator-grid > .editor-panel {
     max-width: none;
   }
 }
@@ -876,7 +890,7 @@ body.sidebar-collapsed .nav-tab::before {
   }
 
   .nav-tabs {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(7, minmax(0, 1fr));
     gap: 4px;
   }
 
@@ -937,11 +951,13 @@ body.sidebar-collapsed .nav-tab::before {
   .progress-summary,
   .investment-summary,
   .hunt-summary,
-  .delivery-summary {
+  .delivery-summary,
+  .calculator-summary {
     grid-template-columns: 1fr;
   }
 
-  .form-grid {
+  .form-grid,
+  .calculator-inputs {
     grid-template-columns: 1fr;
   }
 }

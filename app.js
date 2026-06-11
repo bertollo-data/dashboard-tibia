@@ -113,6 +113,15 @@ const metricDeliveryTotal = document.querySelector("#metricDeliveryTotal");
 const deliveryTableBody = document.querySelector("#deliveryTableBody");
 const deliveryAverageTableBody = document.querySelector("#deliveryAverageTableBody");
 const deliveryAverageCountLabel = document.querySelector("#deliveryAverageCountLabel");
+const calculatorForm = document.querySelector("#calculatorForm");
+const calculatorGoldPerTc = document.querySelector("#calculatorGoldPerTc");
+const calculatorRealPerTc = document.querySelector("#calculatorRealPerTc");
+const calculatorGoldAmount = document.querySelector("#calculatorGoldAmount");
+const calculatorTcAmount = document.querySelector("#calculatorTcAmount");
+const metricGoldToTc = document.querySelector("#metricGoldToTc");
+const metricGoldToReal = document.querySelector("#metricGoldToReal");
+const metricTcToGold = document.querySelector("#metricTcToGold");
+const metricTcToReal = document.querySelector("#metricTcToReal");
 const toast = document.querySelector("#toast");
 
 const tabLabels = {
@@ -122,6 +131,7 @@ const tabLabels = {
   investments: "Investimentos",
   hunts: "Hunts",
   delivery: "Delivery",
+  calculator: "Calculadora",
 };
 
 let pendingCharacterDeleteId = null;
@@ -185,6 +195,19 @@ deliveryWeekFilter.addEventListener("change", () => {
     deliveryWeek.value = deliveryWeekFilter.value;
   }
   renderDelivery();
+});
+
+calculatorForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  saveCalculatorState();
+  showToast("Cotações salvas.");
+});
+
+[calculatorGoldPerTc, calculatorRealPerTc, calculatorGoldAmount, calculatorTcAmount].forEach((input) => {
+  input.addEventListener("input", () => {
+    saveCalculatorState();
+    renderCalculator({ updateInputs: false });
+  });
 });
 
 characterForm.addEventListener("submit", (event) => {
@@ -461,6 +484,7 @@ function loadState() {
       investments: Array.isArray(parsed.investments) ? parsed.investments : [],
       hunts: Array.isArray(parsed.hunts) ? parsed.hunts : [],
       deliveries: Array.isArray(parsed.deliveries) ? parsed.deliveries : [],
+      calculator: normalizeCalculatorState(parsed.calculator),
     };
   } catch {
     return createEmptyState();
@@ -508,6 +532,7 @@ function render() {
   renderInvestments();
   renderHunts();
   renderDelivery();
+  renderCalculator();
   bindDynamicTabButtons();
 }
 
@@ -634,7 +659,7 @@ async function loadCloudState() {
   try {
     authStatus.textContent = "Carregando dados...";
     const remoteState = await window.TibiaSupabase.pullState();
-    if (remoteState.characters.length > 0) {
+    if (hasRemoteStateData(remoteState)) {
       isApplyingRemoteState = true;
       Object.assign(state, remoteState);
       persist();
@@ -655,6 +680,27 @@ async function loadCloudState() {
     updateAuthUi();
     showToast(error.message || "Erro ao carregar dados do Supabase.");
   }
+}
+
+function hasRemoteStateData(remoteState) {
+  return (
+    remoteState.characters.length > 0 ||
+    remoteState.progressions.length > 0 ||
+    remoteState.investments.length > 0 ||
+    remoteState.hunts.length > 0 ||
+    remoteState.deliveries.length > 0 ||
+    hasCalculatorData(remoteState.calculator)
+  );
+}
+
+function hasCalculatorData(calculator) {
+  const normalized = normalizeCalculatorState(calculator);
+  return (
+    normalized.goldPerTc > 0 ||
+    normalized.realPerTc > 0 ||
+    normalized.goldAmount > 0 ||
+    normalized.tcAmount > 0
+  );
 }
 
 function scheduleCloudSync() {
@@ -1297,6 +1343,41 @@ function renderDelivery() {
   renderDeliveryAverageTable(averages);
 }
 
+function renderCalculator(options = {}) {
+  const shouldUpdateInputs = options.updateInputs !== false;
+  const calculator = normalizeCalculatorState(state.calculator);
+  const goldPerTc = calculator.goldPerTc;
+  const realPerTc = calculator.realPerTc;
+  const goldAmount = calculator.goldAmount;
+  const tcAmount = calculator.tcAmount;
+  const goldToTc = goldPerTc > 0 ? goldAmount / goldPerTc : 0;
+  const goldToReal = goldToTc * realPerTc;
+  const tcToGold = tcAmount * goldPerTc;
+  const tcToReal = tcAmount * realPerTc;
+
+  if (shouldUpdateInputs) {
+    calculatorGoldPerTc.value = formatInputNumber(goldPerTc);
+    calculatorRealPerTc.value = formatInputNumber(realPerTc);
+    calculatorGoldAmount.value = formatInputNumber(goldAmount);
+    calculatorTcAmount.value = formatInputNumber(tcAmount);
+  }
+  metricGoldToTc.textContent = `${formatDecimal(goldToTc)} TC`;
+  metricGoldToReal.textContent = formatCurrency(goldToReal);
+  metricTcToGold.textContent = formatGold(tcToGold);
+  metricTcToReal.textContent = formatCurrency(tcToReal);
+}
+
+function saveCalculatorState() {
+  state.calculator = {
+    goldPerTc: parsePositiveNumber(calculatorGoldPerTc.value),
+    realPerTc: parsePositiveNumber(calculatorRealPerTc.value),
+    goldAmount: parsePositiveNumber(calculatorGoldAmount.value),
+    tcAmount: parsePositiveNumber(calculatorTcAmount.value),
+    updatedAt: new Date().toISOString(),
+  };
+  persist();
+}
+
 function renderDeliveryTable(entries, activeCharacter) {
   if (!activeCharacter) {
     deliveryTableBody.innerHTML = `
@@ -1713,6 +1794,17 @@ function normalizeImportedState(value) {
     investments: value && Array.isArray(value.investments) ? value.investments : [],
     hunts: value && Array.isArray(value.hunts) ? value.hunts : [],
     deliveries: value && Array.isArray(value.deliveries) ? value.deliveries : [],
+    calculator: normalizeCalculatorState(value ? value.calculator : null),
+  };
+}
+
+function normalizeCalculatorState(value) {
+  return {
+    goldPerTc: parsePositiveNumber(value ? value.goldPerTc : 0),
+    realPerTc: parsePositiveNumber(value ? value.realPerTc : 0),
+    goldAmount: parsePositiveNumber(value ? value.goldAmount : 0),
+    tcAmount: parsePositiveNumber(value ? value.tcAmount : 0),
+    updatedAt: value && value.updatedAt ? value.updatedAt : "",
   };
 }
 
@@ -1773,6 +1865,7 @@ function createEmptyState() {
     investments: [],
     hunts: [],
     deliveries: [],
+    calculator: normalizeCalculatorState(),
   };
 }
 
@@ -1800,6 +1893,30 @@ function formatDate(value) {
 
 function formatNumber(value) {
   return new Intl.NumberFormat("pt-BR").format(value || 0);
+}
+
+function formatDecimal(value) {
+  return new Intl.NumberFormat("pt-BR", {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 0,
+  }).format(value || 0);
+}
+
+function formatCurrency(value) {
+  return new Intl.NumberFormat("pt-BR", {
+    currency: "BRL",
+    style: "currency",
+  }).format(value || 0);
+}
+
+function formatInputNumber(value) {
+  return value > 0 ? String(value) : "";
+}
+
+function parsePositiveNumber(value) {
+  const normalized = String(value || "").replace(",", ".");
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
 }
 
 function formatGold(value) {

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tibia Progress Dashboard</title>
-    <link rel="stylesheet" href="styles.css?v=20260610-ux-pass-2" />
+    <link rel="stylesheet" href="styles.css?v=20260611-calculator" />
   </head>
   <body>
     <div class="app-shell">
@@ -31,6 +31,7 @@
           <button class="nav-tab" data-short="TC" data-tab="investments" type="button">Investimentos</button>
           <button class="nav-tab" data-short="H" data-tab="hunts" type="button">Hunts</button>
           <button class="nav-tab" data-short="D" data-tab="delivery" type="button">Delivery</button>
+          <button class="nav-tab" data-short="C" data-tab="calculator" type="button">Calculadora</button>
         </nav>
 
         <div class="active-character-panel">
@@ -665,13 +666,111 @@
             </div>
           </div>
         </section>
+
+        <section class="tab-panel" id="calculator">
+          <div class="calculator-grid">
+            <form class="editor-panel" id="calculatorForm">
+              <div class="section-heading">
+                <div>
+                  <span class="eyebrow">Cotações</span>
+                  <h3>Valores atuais</h3>
+                </div>
+              </div>
+
+              <label class="field">
+                <span>Gold por 1 Tibia Coin</span>
+                <input id="calculatorGoldPerTc" min="0" step="0.01" type="number" />
+              </label>
+
+              <label class="field">
+                <span>Reais por 1 Tibia Coin</span>
+                <input id="calculatorRealPerTc" min="0" step="0.01" type="number" />
+              </label>
+
+              <button class="primary-action full-width" id="saveCalculatorRates" type="submit">
+                Salvar cotações
+              </button>
+            </form>
+
+            <div class="progress-content">
+              <div class="calculator-summary">
+                <article class="metric-card compact-metric">
+                  <span>Gold informado em TC</span>
+                  <strong id="metricGoldToTc">0</strong>
+                </article>
+                <article class="metric-card compact-metric">
+                  <span>Gold informado em reais</span>
+                  <strong id="metricGoldToReal">R$ 0,00</strong>
+                </article>
+                <article class="metric-card compact-metric">
+                  <span>TC informado em gold</span>
+                  <strong id="metricTcToGold">0</strong>
+                </article>
+                <article class="metric-card compact-metric">
+                  <span>TC informado em reais</span>
+                  <strong id="metricTcToReal">R$ 0,00</strong>
+                </article>
+              </div>
+
+              <div class="content-band">
+                <div class="section-heading">
+                  <div>
+                    <span class="eyebrow">Simulação</span>
+                    <h3>Converter valores</h3>
+                  </div>
+                </div>
+
+                <div class="calculator-inputs">
+                  <label class="field">
+                    <span>Dinheiro do jogo</span>
+                    <input id="calculatorGoldAmount" min="0" step="1" type="number" />
+                  </label>
+
+                  <label class="field">
+                    <span>Tibia Coins</span>
+                    <input id="calculatorTcAmount" min="0" step="0.01" type="number" />
+                  </label>
+                </div>
+              </div>
+
+              <div class="content-band">
+                <div class="section-heading">
+                  <div>
+                    <span class="eyebrow">Referência</span>
+                    <h3>Como a calculadora interpreta</h3>
+                  </div>
+                </div>
+                <div class="compact-list">
+                  <div class="compact-row">
+                    <div>
+                      <strong>Dinheiro do jogo para TC</strong>
+                      <div class="row-meta">Divide o gold informado pelo valor de 1 TC em gold.</div>
+                    </div>
+                  </div>
+                  <div class="compact-row">
+                    <div>
+                      <strong>TC para reais</strong>
+                      <div class="row-meta">Multiplica a quantidade de TC pelo valor de 1 TC em reais.</div>
+                    </div>
+                  </div>
+                  <div class="compact-row">
+                    <div>
+                      <strong>Valores voláteis</strong>
+                      <div class="row-meta">As cotações ficam salvas e podem ser atualizadas sempre que o mercado mudar.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
     </div>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="supabase-config.js?v=20260610-supabase"></script>
-    <script src="supabase-sync.js?v=20260610-supabase"></script>
-    <script src="app.js?v=20260610-supabase"></script>
+    <script src="supabase-sync.js?v=20260611-calculator"></script>
+    <script src="app.js?v=20260611-calculator"></script>
   </body>
 </html>
