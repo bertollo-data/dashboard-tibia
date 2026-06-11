@@ -50,6 +50,7 @@ const editingProgressId = document.querySelector("#editingProgressId");
 const progressCharacterName = document.querySelector("#progressCharacterName");
 const progressDate = document.querySelector("#progressDate");
 const progressLevel = document.querySelector("#progressLevel");
+const progressPercent = document.querySelector("#progressPercent");
 const progressNote = document.querySelector("#progressNote");
 const saveProgress = document.querySelector("#saveProgress");
 const cancelProgressEdit = document.querySelector("#cancelProgressEdit");
@@ -90,6 +91,10 @@ const huntSessionTime = document.querySelector("#huntSessionTime");
 const huntLoot = document.querySelector("#huntLoot");
 const huntSupplies = document.querySelector("#huntSupplies");
 const huntBalance = document.querySelector("#huntBalance");
+const huntProgressed = document.querySelector("#huntProgressed");
+const huntProgressionFields = document.querySelector("#huntProgressionFields");
+const huntProgressLevel = document.querySelector("#huntProgressLevel");
+const huntProgressPercent = document.querySelector("#huntProgressPercent");
 const huntNote = document.querySelector("#huntNote");
 const saveHunt = document.querySelector("#saveHunt");
 const cancelHuntEdit = document.querySelector("#cancelHuntEdit");
@@ -186,6 +191,7 @@ cancelInvestmentEdit.addEventListener("click", resetInvestmentForm);
 cancelHuntEdit.addEventListener("click", resetHuntForm);
 cancelDeliveryEdit.addEventListener("click", resetDeliveryForm);
 parseHuntAnalyzer.addEventListener("click", fillHuntFromAnalyzer);
+huntProgressed.addEventListener("change", updateHuntProgressionVisibility);
 exportBackup.addEventListener("click", exportStateBackup);
 importBackup.addEventListener("click", () => backupFile.click());
 backupFile.addEventListener("change", importStateBackup);
@@ -270,6 +276,7 @@ progressForm.addEventListener("submit", (event) => {
 
   const activeCharacter = getActiveCharacter();
   const level = Number(progressLevel.value);
+  const percent = progressPercent.value ? Number(progressPercent.value) : null;
   const date = progressDate.value;
 
   if (!activeCharacter) {
@@ -282,11 +289,17 @@ progressForm.addEventListener("submit", (event) => {
     return;
   }
 
+  if (percent !== null && (!Number.isFinite(percent) || percent < 0 || percent > 100)) {
+    showToast("Informe um percentual entre 0 e 100.");
+    return;
+  }
+
   const existingId = editingProgressId.value;
   const payload = {
     characterId: activeCharacter.id,
     date,
     level,
+    percent,
     note: progressNote.value.trim(),
     updatedAt: new Date().toISOString(),
   };
@@ -366,6 +379,9 @@ huntForm.addEventListener("submit", (event) => {
   const supplies = Number(huntSupplies.value);
   const balance = Number(huntBalance.value);
   const date = huntDate.value;
+  const progressed = huntProgressed.checked;
+  const progressLevel = Number(huntProgressLevel.value);
+  const progressPercent = Number(huntProgressPercent.value);
 
   if (!activeCharacter) {
     showToast("Selecione um personagem antes de registrar hunt.");
@@ -387,6 +403,18 @@ huntForm.addEventListener("submit", (event) => {
     return;
   }
 
+  if (
+    progressed &&
+    (!Number.isInteger(progressLevel) ||
+      progressLevel < 1 ||
+      !Number.isFinite(progressPercent) ||
+      progressPercent < 0 ||
+      progressPercent > 100)
+  ) {
+    showToast("Informe level atual e percentual vÃ¡lidos.");
+    return;
+  }
+
   const existingId = editingHuntId.value;
   const payload = {
     characterId: activeCharacter.id,
@@ -399,24 +427,32 @@ huntForm.addEventListener("submit", (event) => {
     supplies,
     balance,
     sessionTime: huntSessionTime.value.trim(),
+    progressed,
+    progressLevel: progressed ? progressLevel : null,
+    progressPercent: progressed ? progressPercent : null,
+    progressEntryId: existingId ? getExistingHuntProgressEntryId(existingId) : "",
     note: huntNote.value.trim(),
     updatedAt: new Date().toISOString(),
   };
 
   if (existingId) {
+    payload.progressEntryId = syncProgressionFromHunt(existingId, payload);
     state.hunts = state.hunts.map((entry) =>
       entry.id === existingId ? { ...entry, ...payload } : entry,
     );
     showToast("Hunt atualizada.");
   } else {
-    state.hunts.push({
+    const newHunt = {
       id: createId("hunt"),
       createdAt: new Date().toISOString(),
       ...payload,
-    });
+    };
+    newHunt.progressEntryId = syncProgressionFromHunt(newHunt.id, newHunt);
+    state.hunts.push(newHunt);
     showToast("Hunt registrada.");
   }
 
+  syncCharacterLevel(activeCharacter.id);
   persist();
   resetHuntForm();
   render();
@@ -968,6 +1004,7 @@ function resetProgressForm() {
   progressFormTitle.textContent = "Novo level";
   cancelProgressEdit.classList.add("hidden");
   progressDate.value = getTodayInputValue();
+  progressPercent.value = "";
   const activeCharacter = getActiveCharacter();
   progressCharacterName.value = activeCharacter ? activeCharacter.name : "Nenhum personagem ativo";
 }
@@ -1005,12 +1042,20 @@ function resetHuntForm() {
   huntFormTitle.textContent = "Nova hunt";
   cancelHuntEdit.classList.add("hidden");
   huntDate.value = getTodayInputValue();
+  huntProgressed.checked = false;
+  huntProgressLevel.value = "";
+  huntProgressPercent.value = "";
+  updateHuntProgressionVisibility();
   const activeCharacter = getActiveCharacter();
   huntCharacterName.value = activeCharacter ? activeCharacter.name : "Nenhum personagem ativo";
   const soloType = document.querySelector('input[name="huntType"][value="solo"]');
   if (soloType) {
     soloType.checked = true;
   }
+}
+
+function updateHuntProgressionVisibility() {
+  huntProgressionFields.classList.toggle("hidden", !huntProgressed.checked);
 }
 
 function resetDeliveryForm(options = {}) {
@@ -1084,7 +1129,7 @@ function renderProgressTable(entries, activeCharacter) {
   if (!activeCharacter) {
     progressTableBody.innerHTML = `
       <tr>
-        <td colspan="4">Cadastre ou selecione um personagem para lançar evolução.</td>
+        <td colspan="5">Cadastre ou selecione um personagem para lançar evolução.</td>
       </tr>
     `;
     return;
@@ -1093,7 +1138,7 @@ function renderProgressTable(entries, activeCharacter) {
   if (entries.length === 0) {
     progressTableBody.innerHTML = `
       <tr>
-        <td colspan="4">Nenhum registro de level para ${escapeHtml(activeCharacter.name)}. Use o formulário ao lado para registrar o primeiro level.</td>
+        <td colspan="5">Nenhum registro de level para ${escapeHtml(activeCharacter.name)}. Use o formulário ao lado para registrar o primeiro level.</td>
       </tr>
     `;
     return;
@@ -1107,6 +1152,7 @@ function renderProgressTable(entries, activeCharacter) {
         <tr>
           <td>${formatDate(entry.date)}</td>
           <td>${entry.level}</td>
+          <td>${formatProgressPercent(entry.percent)}</td>
           <td>${entry.note ? escapeHtml(entry.note) : '<span class="muted">Sem observação</span>'}</td>
           <td>
             <div class="table-actions">
@@ -1208,6 +1254,7 @@ function handleProgressAction(button) {
     editingProgressId.value = entry.id;
     progressDate.value = entry.date;
     progressLevel.value = entry.level;
+    progressPercent.value = entry.percent === null || entry.percent === undefined ? "" : entry.percent;
     progressNote.value = entry.note || "";
     progressFormTitle.textContent = "Editar level";
     cancelProgressEdit.classList.remove("hidden");
@@ -1223,6 +1270,18 @@ function handleProgressAction(button) {
       return;
     }
 
+    state.hunts = state.hunts.map((hunt) =>
+      hunt.progressEntryId === entry.id || hunt.id === entry.sourceHuntId
+        ? {
+            ...hunt,
+            progressed: false,
+            progressLevel: null,
+            progressPercent: null,
+            progressEntryId: "",
+            updatedAt: new Date().toISOString(),
+          }
+        : hunt,
+    );
     state.progressions = state.progressions.filter((item) => item.id !== entry.id);
     pendingProgressDeleteId = null;
     syncCharacterLevel(entry.characterId);
@@ -1483,6 +1542,64 @@ function renderDeliveryAverageTable(averages) {
     .join("");
 }
 
+function syncProgressionFromHunt(huntId, huntPayload) {
+  const previousProgressEntryId = getExistingHuntProgressEntryId(huntId);
+
+  if (!huntPayload.progressed) {
+    if (previousProgressEntryId) {
+      state.progressions = state.progressions.filter((entry) => entry.id !== previousProgressEntryId);
+    }
+    return "";
+  }
+
+  const progressId = previousProgressEntryId || createId("progress");
+  const progressPayload = {
+    id: progressId,
+    characterId: huntPayload.characterId,
+    date: huntPayload.date,
+    level: huntPayload.progressLevel,
+    percent: huntPayload.progressPercent,
+    note: `Registrado pela hunt${huntPayload.hunt ? `: ${huntPayload.hunt}` : ""}`,
+    sourceHuntId: huntId,
+    createdAt: getProgressionCreatedAt(progressId) || new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  if (state.progressions.some((entry) => entry.id === progressId)) {
+    state.progressions = state.progressions.map((entry) =>
+      entry.id === progressId ? { ...entry, ...progressPayload } : entry,
+    );
+  } else {
+    state.progressions.push(progressPayload);
+  }
+
+  return progressId;
+}
+
+function getExistingHuntProgressEntryId(huntId) {
+  const hunt = state.hunts.find((entry) => entry.id === huntId);
+  if (hunt && hunt.progressEntryId) {
+    return hunt.progressEntryId;
+  }
+
+  const progressEntry = state.progressions.find((entry) => entry.sourceHuntId === huntId);
+  return progressEntry ? progressEntry.id : "";
+}
+
+function getProgressionCreatedAt(progressId) {
+  const progressEntry = state.progressions.find((entry) => entry.id === progressId);
+  return progressEntry ? progressEntry.createdAt : "";
+}
+
+function removeProgressionLinkedToHunt(hunt) {
+  const progressEntryId = hunt.progressEntryId || getExistingHuntProgressEntryId(hunt.id);
+  if (!progressEntryId) {
+    return;
+  }
+
+  state.progressions = state.progressions.filter((entry) => entry.id !== progressEntryId);
+}
+
 function handleDeliveryAction(button) {
   const entry = state.deliveries.find((item) => item.id === button.dataset.id);
   if (!entry) {
@@ -1524,7 +1641,7 @@ function renderHuntTable(entries, activeCharacter) {
   if (!activeCharacter) {
     huntTableBody.innerHTML = `
       <tr>
-        <td colspan="9">Cadastre ou selecione um personagem para lançar hunts.</td>
+        <td colspan="10">Cadastre ou selecione um personagem para lançar hunts.</td>
       </tr>
     `;
     return;
@@ -1533,7 +1650,7 @@ function renderHuntTable(entries, activeCharacter) {
   if (entries.length === 0) {
     huntTableBody.innerHTML = `
       <tr>
-        <td colspan="9">Nenhuma hunt registrada para ${escapeHtml(activeCharacter.name)}. Cole o Hunt Analyzer ou preencha os campos manualmente.</td>
+        <td colspan="10">Nenhuma hunt registrada para ${escapeHtml(activeCharacter.name)}. Cole o Hunt Analyzer ou preencha os campos manualmente.</td>
       </tr>
     `;
     return;
@@ -1553,6 +1670,7 @@ function renderHuntTable(entries, activeCharacter) {
           <td>${formatNumber(entry.supplies)}</td>
           <td>${formatNumber(entry.balance)}</td>
           <td>${escapeHtml(entry.sessionTime)}</td>
+          <td>${formatHuntProgress(entry)}</td>
           <td>
             <div class="table-actions">
               <button class="ghost-action" data-hunt-action="edit" data-id="${entry.id}" type="button">Editar</button>
@@ -1590,6 +1708,11 @@ function handleHuntAction(button) {
     huntSupplies.value = entry.supplies;
     huntBalance.value = entry.balance;
     huntSessionTime.value = entry.sessionTime;
+    huntProgressed.checked = Boolean(entry.progressed);
+    huntProgressLevel.value = entry.progressLevel || "";
+    huntProgressPercent.value =
+      entry.progressPercent === null || entry.progressPercent === undefined ? "" : entry.progressPercent;
+    updateHuntProgressionVisibility();
     huntNote.value = entry.note || "";
     const typeInput = document.querySelector(`input[name="huntType"][value="${entry.type}"]`);
     if (typeInput) {
@@ -1609,8 +1732,10 @@ function handleHuntAction(button) {
       return;
     }
 
+    removeProgressionLinkedToHunt(entry);
     state.hunts = state.hunts.filter((item) => item.id !== entry.id);
     pendingHuntDeleteId = null;
+    syncCharacterLevel(entry.characterId);
     persist();
     resetHuntForm();
     render();
@@ -1934,6 +2059,14 @@ function formatDecimal(value) {
   }).format(value || 0);
 }
 
+function formatProgressPercent(value) {
+  if (value === null || value === undefined || value === "") {
+    return '<span class="muted">-</span>';
+  }
+
+  return `${formatDecimal(Number(value))}%`;
+}
+
 function formatTcWithBundles(value) {
   const tcAmount = normalizeTcBundleAmount(value);
   const bundles = Math.floor(tcAmount / TC_BUNDLE_SIZE);
@@ -1980,6 +2113,15 @@ function formatWeekLabel(value) {
 function formatHuntType(value) {
   const labels = { solo: "Solo", duo: "Duo", party: "Party" };
   return labels[value] || "Solo";
+}
+
+function formatHuntProgress(entry) {
+  if (!entry.progressed) {
+    return '<span class="muted">-</span>';
+  }
+
+  const percent = formatProgressPercent(entry.progressPercent);
+  return `Level ${entry.progressLevel} · ${percent}`;
 }
 
 let toastTimeout;

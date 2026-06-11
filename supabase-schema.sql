@@ -15,6 +15,8 @@ create table if not exists public.progressions (
   character_id text not null,
   date date not null,
   level integer not null,
+  percent numeric,
+  source_hunt_id text default '',
   note text default '',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -45,10 +47,21 @@ create table if not exists public.hunts (
   supplies integer not null default 0,
   balance integer not null default 0,
   session_time text not null default '',
+  progressed boolean not null default false,
+  progress_level integer,
+  progress_percent numeric,
+  progress_entry_id text default '',
   note text default '',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.progressions add column if not exists percent numeric;
+alter table public.progressions add column if not exists source_hunt_id text default '';
+alter table public.hunts add column if not exists progressed boolean not null default false;
+alter table public.hunts add column if not exists progress_level integer;
+alter table public.hunts add column if not exists progress_percent numeric;
+alter table public.hunts add column if not exists progress_entry_id text default '';
 
 create table if not exists public.deliveries (
   id text primary key,

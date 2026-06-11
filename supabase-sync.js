@@ -196,6 +196,8 @@
         character_id: record.characterId,
         date: record.date,
         level: record.level,
+        percent: record.percent === null || record.percent === undefined ? null : record.percent,
+        source_hunt_id: record.sourceHuntId || "",
         note: record.note || "",
       };
     }
@@ -224,6 +226,13 @@
         supplies: record.supplies,
         balance: record.balance,
         session_time: record.sessionTime,
+        progressed: Boolean(record.progressed),
+        progress_level: record.progressLevel || null,
+        progress_percent:
+          record.progressPercent === null || record.progressPercent === undefined
+            ? null
+            : record.progressPercent,
+        progress_entry_id: record.progressEntryId || "",
         note: record.note || "",
       };
     }
@@ -279,6 +288,13 @@
         supplies: record.supplies,
         balance: record.balance,
         sessionTime: record.session_time,
+        progressed: Boolean(record.progressed),
+        progressLevel: record.progress_level || null,
+        progressPercent:
+          record.progress_percent === null || record.progress_percent === undefined
+            ? null
+            : Number(record.progress_percent),
+        progressEntryId: record.progress_entry_id || "",
         note: record.note || "",
       };
     }
@@ -299,6 +315,8 @@
       characterId: record.character_id,
       date: record.date,
       level: record.level,
+      percent: record.percent === null || record.percent === undefined ? null : Number(record.percent),
+      sourceHuntId: record.source_hunt_id || "",
       note: record.note || "",
     };
   }

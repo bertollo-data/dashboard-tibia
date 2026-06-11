@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tibia Progress Dashboard</title>
-    <link rel="stylesheet" href="styles.css?v=20260611-auth-gate" />
+    <link rel="stylesheet" href="styles.css?v=20260611-hunt-progress" />
   </head>
   <body class="auth-pending">
     <section class="auth-screen" id="authScreen">
@@ -274,6 +274,11 @@
               </div>
 
               <label class="field">
+                <span>% para o próximo level</span>
+                <input id="progressPercent" max="100" min="0" step="0.01" type="number" />
+              </label>
+
+              <label class="field">
                 <span>Observação</span>
                 <input id="progressNote" autocomplete="off" type="text" />
               </label>
@@ -328,6 +333,7 @@
                       <tr>
                         <th>Data</th>
                         <th>Level</th>
+                        <th>% para o próximo</th>
                         <th>Observação</th>
                         <th>Ações</th>
                       </tr>
@@ -519,6 +525,25 @@
                 <input id="huntBalance" required type="number" />
               </label>
 
+              <label class="switch-field">
+                <input id="huntProgressed" type="checkbox" />
+                <span>Progrediu</span>
+              </label>
+
+              <div class="hunt-progression-fields hidden" id="huntProgressionFields">
+                <div class="form-grid">
+                  <label class="field">
+                    <span>Level atual após a hunt</span>
+                    <input id="huntProgressLevel" min="1" type="number" />
+                  </label>
+
+                  <label class="field">
+                    <span>% para o próximo level</span>
+                    <input id="huntProgressPercent" max="100" min="0" step="0.01" type="number" />
+                  </label>
+                </div>
+              </div>
+
               <label class="field">
                 <span>Observações</span>
                 <input id="huntNote" autocomplete="off" type="text" />
@@ -569,6 +594,7 @@
                         <th>Supplies</th>
                         <th>Balance</th>
                         <th>Tempo</th>
+                        <th>Progresso</th>
                         <th>Ações</th>
                       </tr>
                     </thead>
@@ -799,7 +825,7 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="supabase-config.js?v=20260610-supabase"></script>
-    <script src="supabase-sync.js?v=20260611-calculator-bundle"></script>
-    <script src="app.js?v=20260611-auth-gate"></script>
+    <script src="supabase-sync.js?v=20260611-hunt-progress"></script>
+    <script src="app.js?v=20260611-hunt-progress"></script>
   </body>
 </html>

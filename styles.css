@@ -786,7 +786,7 @@ body.sidebar-collapsed .nav-tab::before {
 }
 
 .hunt-table {
-  min-width: 980px;
+  min-width: 1080px;
 }
 
 .data-table th,
@@ -845,6 +845,54 @@ body.sidebar-collapsed .nav-tab::before {
   align-items: center;
   color: var(--text);
   font-size: 14px;
+}
+
+.switch-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 0 0 16px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #12100d;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.switch-field input {
+  width: 42px;
+  height: 22px;
+  appearance: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-3);
+  transition: background 160ms ease;
+}
+
+.switch-field input::before {
+  content: "";
+  display: block;
+  width: 16px;
+  height: 16px;
+  margin: 2px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition:
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.switch-field input:checked {
+  border-color: var(--accent);
+  background: rgba(214, 168, 70, 0.26);
+}
+
+.switch-field input:checked::before {
+  transform: translateX(20px);
+  background: var(--accent);
 }
 
 .backup-actions {
