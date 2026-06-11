@@ -35,6 +35,72 @@ body {
     sans-serif;
 }
 
+body.auth-pending,
+body.auth-locked {
+  overflow: hidden;
+}
+
+body.auth-pending .app-shell,
+body.auth-locked .app-shell {
+  display: none;
+}
+
+.auth-screen {
+  display: none;
+  min-height: 100vh;
+  padding: 32px;
+  place-items: center;
+  background:
+    linear-gradient(135deg, rgba(214, 168, 70, 0.12), transparent 36%),
+    linear-gradient(180deg, #15130f 0%, var(--bg) 58%, #0d0c0a 100%);
+}
+
+body.auth-pending .auth-screen,
+body.auth-locked .auth-screen {
+  display: grid;
+}
+
+.auth-card {
+  display: grid;
+  gap: 24px;
+  width: min(100%, 460px);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 28px;
+  background: rgba(27, 25, 20, 0.92);
+  box-shadow: var(--shadow);
+}
+
+.auth-brand {
+  align-items: center;
+}
+
+.auth-card h2,
+.auth-card p {
+  margin: 0;
+}
+
+.auth-card h2 {
+  margin-top: 7px;
+  font-size: 28px;
+}
+
+.auth-card p {
+  margin-top: 8px;
+  color: var(--muted);
+}
+
+.auth-card .auth-form {
+  display: grid;
+  gap: 0;
+}
+
+.auth-card-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
 button,
 input,
 select,
@@ -263,16 +329,25 @@ body.sidebar-collapsed .nav-tab::before {
 }
 
 .auth-widget {
-  display: grid;
-  gap: 8px;
-  min-width: 280px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
 }
 
-.auth-status {
+.auth-status,
+.auth-session {
   color: var(--muted);
   font-size: 12px;
   font-weight: 700;
   text-align: right;
+}
+
+.auth-session {
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .auth-form,
@@ -933,20 +1008,29 @@ body.sidebar-collapsed .nav-tab::before {
     width: 100%;
   }
 
-  .auth-widget,
-  .auth-form,
   .auth-actions {
     align-items: stretch;
     flex-direction: column;
     width: 100%;
   }
 
-  .auth-status {
+  .auth-widget {
+    align-items: stretch;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .auth-status,
+  .auth-session {
     text-align: left;
   }
 
   .auth-form input {
     width: 100%;
+  }
+
+  .auth-card-actions {
+    grid-template-columns: 1fr;
   }
 
   .overview-hero-actions {

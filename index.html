@@ -4,9 +4,44 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tibia Progress Dashboard</title>
-    <link rel="stylesheet" href="styles.css?v=20260611-calculator-bundle" />
+    <link rel="stylesheet" href="styles.css?v=20260611-auth-gate" />
   </head>
-  <body>
+  <body class="auth-pending">
+    <section class="auth-screen" id="authScreen">
+      <div class="auth-card">
+        <div class="brand auth-brand">
+          <div class="brand-mark">T</div>
+          <div class="brand-copy">
+            <h1>Tibia Progress</h1>
+            <p>Dashboard pessoal</p>
+          </div>
+        </div>
+
+        <div>
+          <span class="eyebrow">Acesso</span>
+          <h2>Entrar na dashboard</h2>
+          <p>Use sua conta para sincronizar os dados entre computadores.</p>
+        </div>
+
+        <div class="auth-form" id="authForm">
+          <label class="field">
+            <span>Email</span>
+            <input id="authEmail" autocomplete="email" placeholder="seu@email.com" type="email" />
+          </label>
+          <label class="field">
+            <span>Senha</span>
+            <input id="authPassword" autocomplete="current-password" placeholder="senha" type="password" />
+          </label>
+          <div class="auth-card-actions">
+            <button class="primary-action" id="signInButton" type="button">Entrar</button>
+            <button class="secondary-action" id="signUpButton" type="button">Criar conta</button>
+          </div>
+        </div>
+
+        <div class="auth-status" id="authStatus">Conectando...</div>
+      </div>
+    </section>
+
     <div class="app-shell">
       <aside class="sidebar">
         <div class="sidebar-header">
@@ -53,14 +88,8 @@
               <select id="activeCharacterSelect"></select>
             </label>
             <div class="auth-widget" id="authWidget">
-              <div class="auth-status" id="authStatus">Supabase local</div>
-              <div class="auth-form" id="authForm">
-                <input id="authEmail" autocomplete="email" placeholder="email" type="email" />
-                <input id="authPassword" autocomplete="current-password" placeholder="senha" type="password" />
-                <button class="secondary-action" id="signInButton" type="button">Entrar</button>
-                <button class="ghost-action" id="signUpButton" type="button">Criar conta</button>
-              </div>
-              <div class="auth-actions hidden" id="authActions">
+              <div class="auth-session" id="authSession">Sessão local</div>
+              <div class="auth-actions" id="authActions">
                 <button class="secondary-action" id="syncNowButton" type="button">Sincronizar</button>
                 <button class="ghost-action" id="signOutButton" type="button">Sair</button>
               </div>
@@ -771,6 +800,6 @@
 
     <script src="supabase-config.js?v=20260610-supabase"></script>
     <script src="supabase-sync.js?v=20260611-calculator-bundle"></script>
-    <script src="app.js?v=20260611-calculator-bundle"></script>
+    <script src="app.js?v=20260611-auth-gate"></script>
   </body>
 </html>

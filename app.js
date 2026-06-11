@@ -9,7 +9,9 @@ const pageTitle = document.querySelector("#pageTitle");
 const sidebarToggle = document.querySelector("#sidebarToggle");
 const quickAddCharacter = document.querySelector("#quickAddCharacter");
 const activeCharacterSelect = document.querySelector("#activeCharacterSelect");
+const authScreen = document.querySelector("#authScreen");
 const authStatus = document.querySelector("#authStatus");
+const authSession = document.querySelector("#authSession");
 const authForm = document.querySelector("#authForm");
 const authActions = document.querySelector("#authActions");
 const authEmail = document.querySelector("#authEmail");
@@ -577,8 +579,9 @@ function renderActiveCharacterSelect(activeCharacter) {
 async function initSupabaseAuth() {
   if (!window.TibiaSupabase || !window.TibiaSupabase.isConfigured()) {
     authStatus.textContent = "Supabase não configurado";
-    authForm.classList.remove("hidden");
+    authSession.textContent = "Modo local";
     authActions.classList.add("hidden");
+    unlockDashboard();
     return;
   }
 
@@ -593,6 +596,7 @@ async function initSupabaseAuth() {
     }
   } catch (error) {
     authStatus.textContent = "Erro ao conectar Supabase";
+    lockDashboard();
     showToast(error.message || "Erro ao conectar Supabase.");
   }
 }
@@ -621,10 +625,12 @@ async function handleAuthAction(action) {
     updateAuthUi();
 
     if (cloudSession) {
+      unlockDashboard();
       await loadCloudState();
       await syncToCloud({ immediate: true });
     } else {
       authStatus.textContent = "Confirme seu email para entrar.";
+      lockDashboard();
     }
   } catch (error) {
     updateAuthUi();
@@ -646,26 +652,42 @@ async function handleSignOut() {
 function updateAuthUi() {
   if (!window.TibiaSupabase || !window.TibiaSupabase.isConfigured()) {
     authStatus.textContent = "Supabase não configurado";
-    authForm.classList.remove("hidden");
+    authSession.textContent = "Modo local";
     authActions.classList.add("hidden");
+    unlockDashboard();
     return;
   }
 
   if (cloudSession && cloudSession.user) {
-    authStatus.textContent = cloudSession.user.email;
-    authForm.classList.add("hidden");
+    authStatus.textContent = "";
+    authSession.textContent = cloudSession.user.email;
     authActions.classList.remove("hidden");
+    unlockDashboard();
     return;
   }
 
-  authStatus.textContent = "Entre para sincronizar";
-  authForm.classList.remove("hidden");
+  authStatus.textContent = "Entre para sincronizar seus dados.";
+  authSession.textContent = "NÃ£o conectado";
   authActions.classList.add("hidden");
+  lockDashboard();
+}
+
+function lockDashboard() {
+  document.body.classList.remove("auth-pending", "auth-unlocked");
+  document.body.classList.add("auth-locked");
+  authScreen.classList.remove("hidden");
+}
+
+function unlockDashboard() {
+  document.body.classList.remove("auth-pending", "auth-locked");
+  document.body.classList.add("auth-unlocked");
+  authScreen.classList.add("hidden");
 }
 
 async function loadCloudState() {
   try {
     authStatus.textContent = "Carregando dados...";
+    authSession.textContent = "Carregando dados...";
     const remoteState = await window.TibiaSupabase.pullState();
     if (hasRemoteStateData(remoteState)) {
       isApplyingRemoteState = true;
@@ -726,9 +748,9 @@ async function syncToCloud() {
   }
 
   try {
-    authStatus.textContent = "Sincronizando...";
+    authSession.textContent = "Sincronizando...";
     await window.TibiaSupabase.pushState(state);
-    authStatus.textContent = `Sincronizado: ${cloudSession.user.email}`;
+    authSession.textContent = cloudSession.user.email;
   } catch (error) {
     updateAuthUi();
     showToast(error.message || "Erro ao sincronizar.");
