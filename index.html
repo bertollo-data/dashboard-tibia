@@ -1,0 +1,677 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tibia Progress Dashboard</title>
+    <link rel="stylesheet" href="styles.css?v=20260610-ux-pass-2" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="brand">
+            <div class="brand-mark">T</div>
+            <div class="brand-copy">
+              <h1>Tibia Progress</h1>
+              <p>Dashboard pessoal</p>
+            </div>
+          </div>
+          <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Recolher menu">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+        </div>
+
+        <nav class="nav-tabs" aria-label="Navegação principal">
+          <button class="nav-tab active" data-short="VG" data-tab="overview" type="button">Visão geral</button>
+          <button class="nav-tab" data-short="P" data-tab="characters" type="button">Personagens</button>
+          <button class="nav-tab" data-short="LV" data-tab="progress" type="button">Progressão</button>
+          <button class="nav-tab" data-short="TC" data-tab="investments" type="button">Investimentos</button>
+          <button class="nav-tab" data-short="H" data-tab="hunts" type="button">Hunts</button>
+          <button class="nav-tab" data-short="D" data-tab="delivery" type="button">Delivery</button>
+        </nav>
+
+        <div class="active-character-panel">
+          <span class="panel-label">Personagem ativo</span>
+          <strong id="activeCharacterName">Nenhum selecionado</strong>
+          <small id="activeCharacterMeta">Cadastre um personagem para começar</small>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <div>
+            <span class="eyebrow">Primeira versão</span>
+            <h2 id="pageTitle">Visão geral</h2>
+          </div>
+          <div class="topbar-actions">
+            <label class="context-select">
+              <span>Personagem</span>
+              <select id="activeCharacterSelect"></select>
+            </label>
+            <div class="auth-widget" id="authWidget">
+              <div class="auth-status" id="authStatus">Supabase local</div>
+              <div class="auth-form" id="authForm">
+                <input id="authEmail" autocomplete="email" placeholder="email" type="email" />
+                <input id="authPassword" autocomplete="current-password" placeholder="senha" type="password" />
+                <button class="secondary-action" id="signInButton" type="button">Entrar</button>
+                <button class="ghost-action" id="signUpButton" type="button">Criar conta</button>
+              </div>
+              <div class="auth-actions hidden" id="authActions">
+                <button class="secondary-action" id="syncNowButton" type="button">Sincronizar</button>
+                <button class="ghost-action" id="signOutButton" type="button">Sair</button>
+              </div>
+            </div>
+            <button class="primary-action" id="quickAddCharacter" type="button">
+              <span aria-hidden="true">+</span>
+              Novo personagem
+            </button>
+          </div>
+        </header>
+
+        <section class="tab-panel active" id="overview" aria-labelledby="pageTitle">
+          <div class="metrics-grid">
+            <article class="metric-card">
+              <span>Personagens</span>
+              <strong id="metricCharacterCount">0</strong>
+            </article>
+            <article class="metric-card">
+              <span>Level ativo</span>
+              <strong id="metricActiveLevel">-</strong>
+            </article>
+            <article class="metric-card">
+              <span>Investido em TC</span>
+              <strong id="metricInvestedTc">0</strong>
+            </article>
+            <article class="metric-card">
+              <span>Hunts registradas</span>
+              <strong id="metricHuntCount">0</strong>
+            </article>
+            <article class="metric-card">
+              <span>Delivery semanal</span>
+              <strong id="metricDeliveryCount">0/9</strong>
+            </article>
+          </div>
+
+          <div class="overview-hero">
+            <div>
+              <span class="eyebrow">Contexto atual</span>
+              <h3 id="overviewHeroName">Nenhum personagem selecionado</h3>
+              <p id="overviewHeroMeta">Cadastre ou selecione um personagem para começar.</p>
+            </div>
+            <div class="overview-hero-actions">
+              <button class="secondary-action" data-open-tab="progress" type="button">Registrar level</button>
+              <button class="secondary-action" data-open-tab="hunts" type="button">Registrar hunt</button>
+              <button class="secondary-action" data-open-tab="delivery" type="button">Ver delivery</button>
+            </div>
+          </div>
+
+          <div class="content-band">
+            <div class="section-heading">
+              <div>
+                <span class="eyebrow">Resumo</span>
+                <h3>Personagens cadastrados</h3>
+              </div>
+              <button class="secondary-action" data-open-tab="characters" type="button">Gerenciar</button>
+            </div>
+            <div class="compact-list" id="overviewCharacters"></div>
+          </div>
+
+          <div class="overview-grid">
+            <div class="content-band">
+              <div class="section-heading">
+                <div>
+                  <span class="eyebrow">Personagem ativo</span>
+                  <h3>Resumo operacional</h3>
+                </div>
+              </div>
+              <div class="compact-list" id="overviewActiveSummary"></div>
+            </div>
+
+            <div class="content-band">
+              <div class="section-heading">
+                <div>
+                  <span class="eyebrow">Backup</span>
+                  <h3>Dados locais</h3>
+                </div>
+              </div>
+              <div class="backup-actions">
+                <button class="secondary-action" id="exportBackup" type="button">Exportar JSON</button>
+                <button class="secondary-action" id="importBackup" type="button">Importar JSON</button>
+                <input id="backupFile" accept="application/json" class="hidden" type="file" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="characters">
+          <div class="split-layout">
+            <form class="editor-panel" id="characterForm">
+              <div class="section-heading">
+                <div>
+                  <span class="eyebrow">Cadastro</span>
+                  <h3 id="characterFormTitle">Novo personagem</h3>
+                </div>
+                <button class="ghost-action hidden" id="cancelEdit" type="button">Cancelar edição</button>
+              </div>
+
+              <input id="editingCharacterId" type="hidden" />
+
+              <label class="field">
+                <span>Nome do personagem</span>
+                <input id="characterName" autocomplete="off" required type="text" />
+              </label>
+
+              <div class="form-grid">
+                <label class="field">
+                  <span>Level atual</span>
+                  <input id="characterLevel" min="1" required type="number" />
+                </label>
+
+                <label class="field">
+                  <span>Mundo</span>
+                  <input id="characterWorld" autocomplete="off" type="text" />
+                </label>
+              </div>
+
+              <label class="field">
+                <span>Vocação</span>
+                <select id="characterVocation">
+                  <option value="">Não informado</option>
+                  <option value="Knight">Knight</option>
+                  <option value="Elite Knight">Elite Knight</option>
+                  <option value="Paladin">Paladin</option>
+                  <option value="Royal Paladin">Royal Paladin</option>
+                  <option value="Sorcerer">Sorcerer</option>
+                  <option value="Master Sorcerer">Master Sorcerer</option>
+                  <option value="Druid">Druid</option>
+                  <option value="Elder Druid">Elder Druid</option>
+                  <option value="Monk">Monk</option>
+                  <option value="Exalted Monk">Exalted Monk</option>
+                </select>
+              </label>
+
+              <button class="primary-action full-width" type="submit" id="saveCharacter">
+                Salvar personagem
+              </button>
+            </form>
+
+            <div class="list-panel">
+              <div class="section-heading">
+                <div>
+                  <span class="eyebrow">Lista</span>
+                  <h3>Seus personagens</h3>
+                </div>
+                <span class="muted" id="characterCountLabel">0 cadastrados</span>
+              </div>
+              <div class="character-list" id="characterList"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="progress">
+          <div class="progress-grid">
+            <form class="editor-panel" id="progressForm">
+              <div class="section-heading">
+                <div>
+                  <span class="eyebrow">Registro manual</span>
+                  <h3 id="progressFormTitle">Novo level</h3>
+                </div>
+                <button class="ghost-action hidden" id="cancelProgressEdit" type="button">
+                  Cancelar edição
+                </button>
+              </div>
+
+              <input id="editingProgressId" type="hidden" />
+
+              <label class="field">
+                <span>Personagem</span>
+                <input id="progressCharacterName" disabled type="text" />
+              </label>
+
+              <div class="form-grid">
+                <label class="field">
+                  <span>Data</span>
+                  <input id="progressDate" required type="date" />
+                </label>
+
+                <label class="field">
+                  <span>Level</span>
+                  <input id="progressLevel" min="1" required type="number" />
+                </label>
+              </div>
+
+              <label class="field">
+                <span>Observação</span>
+                <input id="progressNote" autocomplete="off" type="text" />
+              </label>
+
+              <button class="primary-action full-width" id="saveProgress" type="submit">
+                Salvar registro
+              </button>
+            </form>
+
+            <div class="progress-content">
+              <div class="progress-summary">
+                <article class="metric-card compact-metric">
+                  <span>Primeiro level</span>
+                  <strong id="metricFirstLevel">-</strong>
+                </article>
+                <article class="metric-card compact-metric">
+                  <span>Level atual</span>
+                  <strong id="metricProgressCurrentLevel">-</strong>
+                </article>
+                <article class="metric-card compact-metric">
+                  <span>Levels ganhos</span>
+                  <strong id="metricLevelsGained">-</strong>
+                </article>
+                <article class="metric-card compact-metric">
+                  <span>Última atualização</span>
+                  <strong id="metricLastProgressDate">-</strong>
+                </article>
+              </div>
+
+              <div class="content-band">
+                <div class="section-heading">
+                  <div>
+                    <span class="eyebrow">Evolução</span>
+                    <h3>Level ao longo do tempo</h3>
+                  </div>
+                  <span class="muted" id="progressChartHint">Personagem ativo</span>
+                </div>
+                <div class="chart-frame" id="progressChart"></div>
+              </div>
+
+              <div class="content-band">
+                <div class="section-heading">
+                  <div>
+                    <span class="eyebrow">Histórico</span>
+                    <h3>Registros de level</h3>
+                  </div>
+                  <span class="muted" id="progressCountLabel">0 registros</span>
+                </div>
+                <div class="table-wrap">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Data</th>
+                        <th>Level</th>
+                        <th>Observação</th>
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody id="progressTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="investments">
+          <div class="investment-grid">
+            <form class="editor-panel" id="investmentForm">
+              <div class="section-heading">
+                <div>
+                  <span class="eyebrow">Tibia Coins</span>
+                  <h3 id="investmentFormTitle">Novo investimento</h3>
+                </div>
+                <button class="ghost-action hidden" id="cancelInvestmentEdit" type="button">
+                  Cancelar edição
+                </button>
+              </div>
+
+              <input id="editingInvestmentId" type="hidden" />
+
+              <label class="field">
+                <span>Personagem</span>
+                <input id="investmentCharacterName" disabled type="text" />
+              </label>
+
+              <div class="form-grid">
+                <label class="field">
+                  <span>Data</span>
+                  <input id="investmentDate" required type="date" />
+                </label>
+
+                <label class="field">
+                  <span>Quantidade de TC</span>
+                  <input id="investmentAmount" min="1" required type="number" />
+                </label>
+              </div>
+
+              <label class="field">
+                <span>Categoria</span>
+                <select id="investmentCategory">
+                  <option value="">Selecione uma categoria</option>
+                  <option value="Boost">Boost</option>
+                  <option value="Itens">Itens</option>
+                  <option value="Gold">Gold</option>
+                  <option value="Cosméticos">Cosméticos</option>
+                  <option value="Utilitários">Utilitários</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>Observação</span>
+                <input id="investmentNote" autocomplete="off" type="text" />
+              </label>
+
+              <button class="primary-action full-width" id="saveInvestment" type="submit">
+                Salvar investimento
+              </button>
+            </form>
+
+            <div class="progress-content">
+              <div class="investment-summary">
+                <article class="metric-card compact-metric">
+                  <span>TC no personagem</span>
+                  <strong id="metricActiveInvestmentTc">0</strong>
+                </article>
+                <article class="metric-card compact-metric">
+                  <span>TC total</span>
+                  <strong id="metricTotalInvestmentTc">0</strong>
+                </article>
+                <article class="metric-card compact-metric">
+                  <span>Registros</span>
+                  <strong id="metricInvestmentCount">0</strong>
+                </article>
+              </div>
+
+              <div class="content-band">
+                <div class="section-heading">
+                  <div>
+                    <span class="eyebrow">Histórico</span>
+                    <h3>Investimentos registrados</h3>
+                  </div>
+                  <span class="muted" id="investmentCountLabel">0 registros</span>
+                </div>
+                <div class="table-wrap">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Data</th>
+                        <th>TC</th>
+                        <th>Categoria</th>
+                        <th>Observação</th>
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody id="investmentTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="hunts">
+          <div class="hunt-grid">
+            <form class="editor-panel" id="huntForm">
+              <div class="section-heading">
+                <div>
+                  <span class="eyebrow">Hunt Analyzer</span>
+                  <h3 id="huntFormTitle">Nova hunt</h3>
+                </div>
+                <button class="ghost-action hidden" id="cancelHuntEdit" type="button">
+                  Cancelar edição
+                </button>
+              </div>
+
+              <input id="editingHuntId" type="hidden" />
+
+              <label class="field">
+                <span>Texto bruto do Hunt Analyzer</span>
+                <textarea id="huntAnalyzerRaw" rows="6"></textarea>
+              </label>
+
+              <button class="secondary-action full-width form-secondary" id="parseHuntAnalyzer" type="button">
+                Preencher campos
+              </button>
+
+              <label class="field">
+                <span>Personagem</span>
+                <input id="huntCharacterName" disabled type="text" />
+              </label>
+
+              <div class="form-grid">
+                <label class="field">
+                  <span>Data</span>
+                  <input id="huntDate" required type="date" />
+                </label>
+
+                <label class="field">
+                  <span>Level no momento</span>
+                  <input id="huntLevel" autocomplete="off" type="text" />
+                </label>
+              </div>
+
+              <label class="field">
+                <span>Hunt</span>
+                <input id="huntName" autocomplete="off" type="text" />
+              </label>
+
+              <fieldset class="radio-field">
+                <legend>Tipo</legend>
+                <label><input name="huntType" type="radio" value="solo" checked /> Solo</label>
+                <label><input name="huntType" type="radio" value="duo" /> Duo</label>
+                <label><input name="huntType" type="radio" value="party" /> Party</label>
+              </fieldset>
+
+              <div class="form-grid">
+                <label class="field">
+                  <span>XP gained</span>
+                  <input id="huntXp" min="0" required type="number" />
+                </label>
+
+                <label class="field">
+                  <span>Session time</span>
+                  <input id="huntSessionTime" autocomplete="off" required placeholder="Ex: 01:30h" type="text" />
+                </label>
+              </div>
+
+              <div class="form-grid">
+                <label class="field">
+                  <span>Loot</span>
+                  <input id="huntLoot" min="0" required type="number" />
+                </label>
+
+                <label class="field">
+                  <span>Supplies</span>
+                  <input id="huntSupplies" min="0" required type="number" />
+                </label>
+              </div>
+
+              <label class="field">
+                <span>Balance</span>
+                <input id="huntBalance" required type="number" />
+              </label>
+
+              <label class="field">
+                <span>Observações</span>
+                <input id="huntNote" autocomplete="off" type="text" />
+              </label>
+
+              <button class="primary-action full-width" id="saveHunt" type="submit">
+                Salvar hunt
+              </button>
+            </form>
+
+            <div class="progress-content">
+              <div class="hunt-summary">
+                <article class="metric-card compact-metric">
+                  <span>XP em hunts</span>
+                  <strong id="metricHuntXp">0</strong>
+                </article>
+                <article class="metric-card compact-metric">
+                  <span>Balance total</span>
+                  <strong id="metricHuntBalance">0</strong>
+                </article>
+                <article class="metric-card compact-metric">
+                  <span>Loot total</span>
+                  <strong id="metricHuntLoot">0</strong>
+                </article>
+                <article class="metric-card compact-metric">
+                  <span>Supplies total</span>
+                  <strong id="metricHuntSupplies">0</strong>
+                </article>
+              </div>
+
+              <div class="content-band">
+                <div class="section-heading">
+                  <div>
+                    <span class="eyebrow">Histórico</span>
+                    <h3>Hunts registradas</h3>
+                  </div>
+                  <span class="muted" id="huntCountLabel">0 registros</span>
+                </div>
+                <div class="table-wrap">
+                  <table class="data-table hunt-table">
+                    <thead>
+                      <tr>
+                        <th>Data</th>
+                        <th>Hunt</th>
+                        <th>Tipo</th>
+                        <th>XP</th>
+                        <th>Loot</th>
+                        <th>Supplies</th>
+                        <th>Balance</th>
+                        <th>Tempo</th>
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody id="huntTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tab-panel" id="delivery">
+          <div class="delivery-grid">
+            <form class="editor-panel" id="deliveryForm">
+              <div class="section-heading">
+                <div>
+                  <span class="eyebrow">Creature products</span>
+                  <h3 id="deliveryFormTitle">Novo custo</h3>
+                </div>
+                <button class="ghost-action hidden" id="cancelDeliveryEdit" type="button">
+                  Cancelar edição
+                </button>
+              </div>
+
+              <input id="editingDeliveryId" type="hidden" />
+
+              <label class="field">
+                <span>Personagem</span>
+                <input id="deliveryCharacterName" disabled type="text" />
+              </label>
+
+              <label class="field">
+                <span>Semana da entrega</span>
+                <input id="deliveryWeek" required type="week" />
+              </label>
+
+              <label class="field">
+                <span>Produto de criatura</span>
+                <input id="deliveryProduct" autocomplete="off" required type="text" />
+              </label>
+
+              <div class="form-grid">
+                <label class="field">
+                  <span>Quantidade necessária</span>
+                  <input id="deliveryQuantity" min="1" required type="number" />
+                </label>
+
+                <label class="field">
+                  <span>Valor total</span>
+                  <input id="deliveryTotalValue" min="0" required type="number" />
+                </label>
+              </div>
+
+              <button class="primary-action full-width" id="saveDelivery" type="submit">
+                Salvar custo
+              </button>
+            </form>
+
+            <div class="progress-content">
+              <div class="delivery-summary">
+                <article class="metric-card compact-metric">
+                  <span>Semana visível</span>
+                  <strong id="metricDeliveryWeek">-</strong>
+                </article>
+                <article class="metric-card compact-metric">
+                  <span>Itens cadastrados</span>
+                  <strong id="metricDeliveryItems">0/9</strong>
+                </article>
+                <article class="metric-card compact-metric">
+                  <span>Custo total</span>
+                  <strong id="metricDeliveryTotal">0</strong>
+                </article>
+              </div>
+
+              <div class="content-band">
+                <div class="section-heading">
+                  <div>
+                    <span class="eyebrow">Semana</span>
+                    <h3>Entrega selecionada</h3>
+                  </div>
+                  <label class="inline-field">
+                    <span>Visualizar</span>
+                    <input id="deliveryWeekFilter" type="week" />
+                  </label>
+                </div>
+                <div class="table-wrap">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Produto</th>
+                        <th>Quantidade</th>
+                        <th>Valor total</th>
+                        <th>Média unitária</th>
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody id="deliveryTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="content-band">
+                <div class="section-heading">
+                  <div>
+                    <span class="eyebrow">Médias</span>
+                    <h3>Média por produto</h3>
+                  </div>
+                  <span class="muted" id="deliveryAverageCountLabel">0 produtos</span>
+                </div>
+                <div class="table-wrap">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Produto</th>
+                        <th>Quantidade total</th>
+                        <th>Valor total</th>
+                        <th>Média</th>
+                      </tr>
+                    </thead>
+                    <tbody id="deliveryAverageTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script src="supabase-config.js?v=20260610-supabase"></script>
+    <script src="supabase-sync.js?v=20260610-supabase"></script>
+    <script src="app.js?v=20260610-supabase"></script>
+  </body>
+</html>

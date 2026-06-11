@@ -1,0 +1,11 @@
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+
+# Local runtime/cache files
+*.log
+node_modules/
+
