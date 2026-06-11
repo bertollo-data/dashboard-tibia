@@ -1439,12 +1439,11 @@ function renderCalculator(options = {}) {
   const realPerTc = calculator.realPerTc;
   const goldAmount = calculator.goldAmount;
   const tcAmount = normalizeTcBundleAmount(calculator.tcAmount);
-  const goldBundleCount = goldPerTc > 0 ? Math.floor(goldAmount / goldPerTc) : 0;
-  const tcBundleCount = Math.floor(tcAmount / TC_BUNDLE_SIZE);
-  const goldToTc = goldBundleCount * TC_BUNDLE_SIZE;
-  const goldToReal = goldBundleCount * realPerTc;
-  const tcToGold = tcBundleCount * goldPerTc;
-  const tcToReal = tcBundleCount * realPerTc;
+  const rawGoldToTc = goldPerTc > 0 ? goldAmount / goldPerTc : 0;
+  const goldToTc = normalizeTcBundleAmount(rawGoldToTc);
+  const goldToReal = goldToTc * realPerTc;
+  const tcToGold = tcAmount * goldPerTc;
+  const tcToReal = tcAmount * realPerTc;
 
   if (shouldUpdateInputs) {
     calculatorGoldPerTc.value = formatInputNumber(goldPerTc);

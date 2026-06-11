@@ -733,12 +733,12 @@
               </div>
 
               <label class="field">
-                <span>Gold por pacote de 25 TC</span>
+                <span>Gold por 1 Tibia Coin</span>
                 <input id="calculatorGoldPerTc" min="0" step="0.01" type="number" />
               </label>
 
               <label class="field">
-                <span>Reais por pacote de 25 TC</span>
+                <span>Reais por 1 Tibia Coin</span>
                 <input id="calculatorRealPerTc" min="0" step="0.01" type="number" />
               </label>
 
@@ -799,13 +799,13 @@
                   <div class="compact-row">
                     <div>
                       <strong>Dinheiro do jogo para TC</strong>
-                      <div class="row-meta">Divide o gold informado pelo valor do pacote e considera apenas pacotes completos de 25 TC.</div>
+                      <div class="row-meta">Divide o gold informado pelo valor unitário e considera apenas múltiplos de 25 TC.</div>
                     </div>
                   </div>
                   <div class="compact-row">
                     <div>
                       <strong>TC para reais</strong>
-                      <div class="row-meta">Converte a quantidade informada em pacotes de 25 TC e multiplica pelo valor em reais.</div>
+                      <div class="row-meta">Arredonda a quantidade informada para múltiplos de 25 TC e multiplica pelo valor unitário.</div>
                     </div>
                   </div>
                   <div class="compact-row">
@@ -826,6 +826,6 @@
 
     <script src="supabase-config.js?v=20260610-supabase"></script>
     <script src="supabase-sync.js?v=20260611-hunt-progress"></script>
-    <script src="app.js?v=20260611-hunt-progress"></script>
+    <script src="app.js?v=20260611-calculator-unit-price"></script>
   </body>
 </html>
