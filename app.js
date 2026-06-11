@@ -209,6 +209,7 @@ deliveryWeekFilter.addEventListener("change", () => {
 calculatorForm.addEventListener("submit", (event) => {
   event.preventDefault();
   saveCalculatorState();
+  renderCalculator();
   showToast("Cotações salvas.");
 });
 
@@ -1435,25 +1436,24 @@ function renderDelivery() {
 function renderCalculator(options = {}) {
   const shouldUpdateInputs = options.updateInputs !== false;
   const calculator = normalizeCalculatorState(state.calculator);
-  const goldPerTc = calculator.goldPerTc;
-  const realPerTc = calculator.realPerTc;
+  const goldPerBundle = calculator.goldPerTc;
+  const realPerBundle = calculator.realPerTc;
   const goldAmount = calculator.goldAmount;
   const tcAmount = normalizeTcBundleAmount(calculator.tcAmount);
-  const rawGoldToTc = goldPerTc > 0 ? goldAmount / goldPerTc : 0;
-  const goldToTc = normalizeTcBundleAmount(rawGoldToTc);
-  const goldToReal = goldToTc * realPerTc;
-  const tcToGold = tcAmount * goldPerTc;
-  const tcToReal = tcAmount * realPerTc;
+  const goldBundleCount = goldPerBundle > 0 ? Math.floor(goldAmount / goldPerBundle) : 0;
+  const tcBundleCount = Math.floor(tcAmount / TC_BUNDLE_SIZE);
+  const goldToTc = goldBundleCount * TC_BUNDLE_SIZE;
+  const tcToReal = tcBundleCount * realPerBundle;
 
   if (shouldUpdateInputs) {
-    calculatorGoldPerTc.value = formatInputNumber(goldPerTc);
-    calculatorRealPerTc.value = formatInputNumber(realPerTc);
+    calculatorGoldPerTc.value = formatInputNumber(goldPerBundle);
+    calculatorRealPerTc.value = formatInputNumber(realPerBundle);
     calculatorGoldAmount.value = formatInputNumber(goldAmount);
     calculatorTcAmount.value = formatInputNumber(tcAmount);
   }
-  metricGoldToTc.textContent = formatTcWithBundles(goldToTc);
-  metricGoldToReal.textContent = formatCurrency(goldToReal);
-  metricTcToGold.textContent = formatGold(tcToGold);
+  metricGoldToTc.textContent = formatGold(goldPerBundle);
+  metricGoldToReal.textContent = formatCurrency(realPerBundle);
+  metricTcToGold.textContent = formatTcWithBundles(goldToTc);
   metricTcToReal.textContent = formatCurrency(tcToReal);
 }
 
